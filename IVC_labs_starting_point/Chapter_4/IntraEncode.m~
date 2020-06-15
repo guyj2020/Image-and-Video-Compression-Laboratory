@@ -1,0 +1,39 @@
+function dst = IntraEncode(image, qScale)
+%  Function Name : IntraEncode.m
+%  Input         : image (Original RGB Image)
+%                  qScale(quantization scale)
+%  Output        : dst   (sequences after zero-run encoding, 1xN)
+
+imageYCbCr = ictRGB2YCbCr(image);
+imageYCbCr_dct = blockproc(imageYCbCr, [8, 8], @(block_struct) DCT8x8(block_struct.data));
+imageYCbCr_quant = blockproc(imageYCbCr_dct, [8, 8], @(block_struct) Quant8x8(block_struct.data, qScale));
+imageYCbCr_zigzag = blockproc(imageYCbCr_quant, [8, 8], @(block_struct) ZigZag8x8(block_struct.data));
+dst = ZeroRunEnc_EoB(imageYCbCr_zigzag, 1000);
+
+
+%% DEC
+img_size = size(image);
+
+enc_dec = reshape(ZeroRunDec_EoB(dst, 1000), [img_size(2)*8, prod(img_size)/(img_size(2)*8)]);
+enc_zigzag = blockproc(enc_dec, [64, 1], @(block_struct) DeZigZag8x8(block_struct.data));
+
+% reshape
+enc_zigzag_reshaped = zeros(img_size);
+int_im1 = [];
+int_im2 = [];
+int_im3 = [];
+for j = 0:7
+    int_im1 = [int_im1, (1:img_size(3)*8:prod(img_size)/img_size(2))+j];
+    int_im2 = [int_im2, (9:img_size(3)*8:prod(img_size)/img_size(2))+j];
+    int_im3 = [int_im3, (17:img_size(3)*8:prod(img_size)/img_size(2))+j];
+end
+enc_zigzag_reshaped(:, :, 1) = enc_zigzag(:, sort(int_im1));
+enc_zigzag_reshaped(:, :, 2) = enc_zigzag(:, sort(int_im2));
+enc_zigzag_reshaped(:, :, 3) = enc_zigzag(:, sort(int_im3));
+
+rec_imageYCbCr_dequant = blockproc(enc_zigzag_reshaped, [8, 8], @(block_struct) DeQuant8x8(block_struct.data, qScale));
+rec_imageYCbCr_Idct = blockproc(rec_imageYCbCr_dequant, [8, 8], @(block_struct) IDCT8x8(block_struct.data));
+rec_image = ictYCbCr2RGB(rec_imageYCbCr_Idct);
+
+disp("Wait")
+end

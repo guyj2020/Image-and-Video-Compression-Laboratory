@@ -1,0 +1,12 @@
+%% DO NOT MODIFY THIS CODE
+%% This code will call your function and should work without any changes
+imageLena_small = double(imread('lena_small.tif'));
+imageLena = double(imread('lena.tif'));
+bits         = 8;
+epsilon      = 0.1;
+block_size   = 2;
+[clusters, Temp_clusters] = VectorQuantizer(imageLena_small, bits, epsilon, block_size);
+%% Test your function
+qImage_small = ApplyVectorQuantizer(imageLena_small, clusters, block_size);
+qImage = ApplyVectorQuantizer(imageLena, clusters, block_size);
+fprintf("The syntax of the code seems to be correct, next run the assessment to verify the correctness");
