@@ -1,3 +1,6 @@
+clear
+clc
+
 lena_small = double(imread('lena_small.tif'));
 Lena       = double(imread('lena.tif'));
 
@@ -5,7 +8,7 @@ scales = 1 : 0.6 : 1; % quantization scale factor, for E(4-1), we just evaluate 
 % scales = 0.4:0.2:4; % quantization scale factor, for E(4-1), we just evaluate scale factor of 1
 % figure;
 % hold on;
-
+tic;
 % update from A = [A value] -> to A(i) = value
 for scaleIdx = 1 : numel(scales)
     qScale   = scales(scaleIdx);
@@ -18,10 +21,10 @@ for scaleIdx = 1 : numel(scales)
     [BinaryTree, HuffCode, BinCode, Codelengths] = buildHuffman(pmfqLenaSmall);
     
     
-    add_int = -min(min(k_small), min(k))+1;
-    bytestream = enc_huffman_new(k+add_int, BinCode, Codelengths);
+    off_set = -min(min(k_small), min(k))+1;
+    bytestream = enc_huffman_new(k+off_set, BinCode, Codelengths);
     
-    k_rec = double(reshape(dec_huffman_new(bytestream, BinaryTree, max(size(k(:)))), size(k)))-add_int;
+    k_rec = double(reshape(dec_huffman_new(bytestream, BinaryTree, max(size(k(:)))), size(k)))-off_set;
 
     %% use trained table to encode k to get the bytestream
     % your code here
@@ -34,6 +37,7 @@ for scaleIdx = 1 : numel(scales)
 %     text(bitPerPixel(scaleIdx), PSNR(scaleIdx), '  lena.tif - E4-2')
 
 end
+toc;
 
 % plot(bitPerPixel, PSNR, 'bx-')
 % xlabel("bpp");
