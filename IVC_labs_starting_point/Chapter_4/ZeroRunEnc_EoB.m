@@ -11,7 +11,7 @@ function zze = ZeroRunEnc_EoB(zz, EOB)
  %%
 %     zz = reshape(zz, [64, size(zz, 2)/64]);
     zz = reshape(zz, [64, numel(zz)/64]);
-    zze = []; 
+    counter = 1;
     for idx = 1:size(zz, 2)
 
         zz_idx = zz(:, idx);
@@ -47,7 +47,13 @@ function zze = ZeroRunEnc_EoB(zz, EOB)
             else
                 codeTemp = symbol(i);
             end
-            zze = [zze codeTemp];
+            if length(codeTemp) == 2
+                zze(counter:counter+1) = codeTemp;
+                counter = counter + 2;
+            else
+                zze(counter) = codeTemp;
+                counter = counter + 1;
+            end
         end
     end
 end
