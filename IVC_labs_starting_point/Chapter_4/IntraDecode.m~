@@ -9,8 +9,7 @@ enc_dec = reshape(ZeroRunDec_EoB(image, 1000), [img_size(2)*8, prod(img_size)/(i
 enc_zigzag = blockproc(enc_dec, [64, 1], @(block_struct) DeZigZag8x8(block_struct.data));
 % TODO: Wir bekommen hier auch gleich die location in diesen block_struct
 % also solltest du in der Lage vielleicht diese zu Nutzen um es etwas
-% schöner zu teilen (ohne den reshape hier unten)
-% UseParallel
+% schöner zu teilen (ohne den 
 
 % reshape
 enc_zigzag_reshaped = zeros(img_size);

@@ -16,7 +16,6 @@ for scaleIdx = 1 : numel(scales)
     k        = IntraEncode(Lena, qScale);
     %% use pmf of k_small to build and train huffman table
     %your code here
-   
     pmfqLenaSmall = stats_marg(k_small, min(min(k_small), min(k)):max(max(k_small), max(k)));
     [BinaryTree, HuffCode, BinCode, Codelengths] = buildHuffman(pmfqLenaSmall);
     
