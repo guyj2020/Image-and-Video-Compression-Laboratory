@@ -9,4 +9,7 @@ reference_image = ictRGB2YCbCr(image);
 mv_indices = SSD(reference_image(:,:,1), image(:,:,1));
 
 rec_image = SSD_rec(reference_image, mv_indices);
+
+% TODO ERGEBNIS IST BULLSHIT!!!!!
+calcPSNR(reference_image, rec_image)
 toc
