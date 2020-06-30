@@ -1,8 +1,18 @@
 function dst_64 = ZeroRunDec8x8_EoB(src_64, EoB)
+%%
     index = 1;
-    dst_64 = zeros(1, 64);
+%     dst_64 = zeros(1, 64);
+    dst_64 = [];
     for i = 1:length(src_64)
         if eq(src_64(i),EoB)
+            %% Comment out for faster version but expect possibility to have a bug
+            if size(src_64, 2) == 1
+                dst_64 = zeros(1, 64);
+            else
+                mult = ceil(size(dst_64, 2)/64);
+                dst_64(1, end+1:end+mult*64-size(dst_64(1:end-1), 2)-1) = zeros(1, mult*64-size(dst_64(1:end), 2));
+            end
+            %%
             break;
         end
         if eq(src_64(i),0) 
@@ -23,4 +33,5 @@ function dst_64 = ZeroRunDec8x8_EoB(src_64, EoB)
             end
         end
     end
+   
 end

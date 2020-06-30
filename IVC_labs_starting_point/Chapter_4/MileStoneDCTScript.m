@@ -5,7 +5,7 @@ lena_small = double(imread('lena_small.tif'));
 Lena       = double(imread('lena.tif'));
 
 scales = 1 : 0.6 : 1; % quantization scale factor, for E(4-1), we just evaluate scale factor of 1
-% scales = 0.4:0.2:4; % quantization scale factor, for E(4-1), we just evaluate scale factor of 1
+% scales = 0.2:0.2:2; % quantization scale factor, for E(4-1), we just evaluate scale factor of 1
 % figure;
 % hold on;
 tic;

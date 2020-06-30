@@ -4,12 +4,12 @@ close
 
 qScale = 1;
 
-directory = fullfile('sequences', 'foreman20_40_RGB');
+directory = fullfile('../../sequences', 'foreman20_40_RGB');
 path(path, directory)
 frames = dir(fullfile(directory,'*.bmp'));
 
-psnr = zeros(length(frames));
-rate = zeros(length(frames));
+psnr = zeros(length(frames), 1);
+rate = zeros(length(frames), 1);
 
 for i = 1:length(frames)
     im = double(imread(fullfile(directory, frames(i).name)));
