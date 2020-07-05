@@ -1,19 +1,13 @@
-% EOB = 1000;
-% zz = [1 0 0 2 3 4 5 1 3 0 0 0 0 0 0 0 0 1 2 3 4 0 0 0 0 0 1  4 6 8 2,...
-%     4 30 0 0 0 0 2 3 5 6 7 8 9 0 3 8 2 9 29 2 0 0 0 0 0 1 3 9 4 3 0 0 0];
-% zero_run_enc = ZeroRunEnc_EoB(foreman10_residual_zig_zag, EOB);
-
 function zze = ZeroRunEnc_EoB(zz, EOB)
 %  Input         : zz (Zig-zag scanned sequence, 1xN)
 %                  EOB (End Of Block symbol, scalar)
 %
 %  Output        : zze (zero-run-level encoded sequence, 1xM)
+ %
  %%
-%     zz = reshape(zz, [64, size(zz, 2)/64]);
     zz = reshape(zz, [64, numel(zz)/64]);
     counter = 1;
     for idx = 1:size(zz, 2)
-
         zz_idx = zz(:, idx);
         index = 1;
         symbol = [];
@@ -56,4 +50,6 @@ function zze = ZeroRunEnc_EoB(zz, EOB)
             end
         end
     end
+    
+   
 end

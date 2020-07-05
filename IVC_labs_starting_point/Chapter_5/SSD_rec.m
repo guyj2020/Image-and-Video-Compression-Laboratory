@@ -6,7 +6,7 @@ function rec_image = SSD_rec(ref_image, motion_vectors)
 
 
     rec_image = zeros(size(ref_image));
-    ref_image = padarray(ref_image, [4, 4], 'both');
+    ref_image = padarray(ref_image, [4, 4], 'both', 'replicate');
     
     for x = 1:size(motion_vectors, 1)
         for y = 1:size(motion_vectors, 2)
@@ -22,7 +22,8 @@ function rec_image = SSD_rec(ref_image, motion_vectors)
                 ref_image(ref_XStart:ref_XEnd, ref_YStart:ref_YEnd, :);
         end 
     end
-
+ 
 end
+ 
 
 

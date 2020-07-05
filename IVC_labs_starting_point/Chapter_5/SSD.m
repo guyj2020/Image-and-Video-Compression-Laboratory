@@ -4,7 +4,7 @@ function motion_vectors_indices = SSD(ref_image, image)
 %
 %  Output        : motion_vectors_indices (Motion Vector Indices, size: (height/8) x (width/8) x 1 )
 
-ref_image = padarray(ref_image, [4, 4], 'both');
+ref_image = padarray(ref_image, [4, 4], 'both', 'replicate');
 motion_vectors_indices = blockproc(image, [8, 8], @(block_struct) BlockSSD(block_struct.data, block_struct.location, ref_image));
 
 end
@@ -26,6 +26,3 @@ for x = -size(block, 1)/2:size(block, 1)/2
 end
 motion_vector_indices = sub2ind(size(block)+1, best_loc(2), best_loc(1));
 end
-
-
-

@@ -1,5 +1,6 @@
 function dst = ZeroRunEnc(src)
     % place your function code here
+    % TODO: FASTER FASTER FASTER FASTER
     index = 1;
     symbol(index) = src(1);
     magnitude(index) = 1;

@@ -3,17 +3,19 @@ clc
 
 lena_small = double(imread('lena_small.tif'));
 Lena       = double(imread('lena.tif'));
+EoB = 4000;
 
-scales = 1 : 0.6 : 1; % quantization scale factor, for E(4-1), we just evaluate scale factor of 1
-% scales = 0.2:0.2:2; % quantization scale factor, for E(4-1), we just evaluate scale factor of 1
-% figure;
-% hold on;
+% scales = 1 : 0.6 : 1; % quantization scale factor, for E(4-1), we just evaluate scale factor of 1
+% scales = 0.4:0.2:4; % quantization scale factor, for E(4-1), we just evaluate scale factor of 1
+% scales = [0.07, 0.2, 0.4, 0.8, 1.0, 1.5, 2, 3, 4, 4.5];
+scales = 0.4;
 tic;
-% update from A = [A value] -> to A(i) = value
+bitPerPixel = zeros(size(scales, 2), 1);
+PSNR = zeros(size(scales, 2), 1);
 for scaleIdx = 1 : numel(scales)
     qScale   = scales(scaleIdx);
-    k_small  = IntraEncode(lena_small, qScale);
-    k        = IntraEncode(Lena, qScale);
+    k_small  = IntraEncode(lena_small, qScale, EoB, 0);
+    k        = IntraEncode(Lena, qScale, EoB, 0);
     %% use pmf of k_small to build and train huffman table
     %your code here
     pmfqLenaSmall = stats_marg(k_small, min(min(k_small), min(k)):max(max(k_small), max(k)));
@@ -29,7 +31,7 @@ for scaleIdx = 1 : numel(scales)
     % your code here
     bitPerPixel(scaleIdx) = (numel(bytestream)*8) / (numel(Lena)/3);
     %% image reconstruction
-    I_rec = IntraDecode(k_rec, size(Lena),qScale);
+    I_rec = IntraDecode(k_rec, size(Lena),qScale, EoB, 0);
     PSNR(scaleIdx) = calcPSNR(Lena, I_rec);
     fprintf('QP: %.1f bit-rate: %.2f bits/pixel PSNR: %.2fdB\n', qScale, bitPerPixel(scaleIdx), PSNR(scaleIdx))
 %     plot(bitPerPixel(scaleIdx), PSNR(scaleIdx), 'bx');

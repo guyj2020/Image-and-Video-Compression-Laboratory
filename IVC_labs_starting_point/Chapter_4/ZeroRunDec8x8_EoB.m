@@ -5,7 +5,7 @@ function dst_64 = ZeroRunDec8x8_EoB(src_64, EoB)
     dst_64 = [];
     for i = 1:length(src_64)
         if eq(src_64(i),EoB)
-            %% Comment out for faster version but expect possibility to have a bug
+%             %% Comment out for faster version but expect possibility to have a bug
             if size(src_64, 2) == 1
                 dst_64 = zeros(1, 64);
             else

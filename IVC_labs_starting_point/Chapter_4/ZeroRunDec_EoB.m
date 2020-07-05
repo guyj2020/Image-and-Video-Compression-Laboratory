@@ -4,7 +4,8 @@ function dst = ZeroRunDec_EoB(src, EoB)
 %                  EoB (end of block sign)
 %
 %  Output        : dst (reconstructed zig-zag scanned sequence 1xN)
-% Buf fixed but now it takes longer..
+
+%%
 EOB_idx = find(src == EoB);
 if isempty(EOB_idx)
     EOB_idx = length(src);
@@ -18,8 +19,6 @@ for idx = 1:length(EOB_idx)
         src_64 = src(EOB_idx(idx-1)+1:EOB_idx(idx));
     end
     dst_64 = ZeroRunDec8x8_EoB(src_64, EoB);
-%     dst = [dst, dst_64];
     dst(1, end+1:end+size(dst_64, 2)) = dst_64;
 end
-
 end
