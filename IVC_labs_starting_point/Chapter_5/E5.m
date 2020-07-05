@@ -2,12 +2,10 @@ clear
 clc
 close
 
-% qScale = 0.07;
-% scales = [0.2];
-scales = [0.07, 0.2, 0.4, 0.8, 1.0, 1.5, 2, 3, 4, 4.5]; %    % Problem: 0.2 and i == 9
+scales = [0.07, 0.2, 0.4, 0.8, 1.0, 1.5, 2, 3, 4, 4.5];
 EoB = 4000;
 
-directory = fullfile('../../sequences', 'foreman20_40_RGB');
+directory = fullfile('../../sequences', 'foreman20_40_RGB'); % path to src in the first part
 path(path, directory)
 frames = dir(fullfile(directory,'*.bmp'));
 
@@ -38,38 +36,55 @@ for s = 1:numel(scales)
         mv_indices = SSD(ref_im(:,:,1), im1(:,:,1));
         rec_im = SSD_rec(ref_im, mv_indices);
         err_im = im1-rec_im;
-%         if and(isequal(qScale, 0.2), or(isequal(i, 9),isequal(i, 20)))
+        try
+            zeroRun= IntraEncode(err_im, qScale, EoB, 0, true);
+            if isequal(i, 2)
+                pmfMV = stats_marg(mv_indices, min(mv_indices(:)):max(mv_indices(:)));
+                [BinaryTreeMV, ~, BinCodeMV, CodelengthsMV] = buildHuffman(pmfMV);
+            end
+
+            pmfZR = stats_marg(zeroRun, min(zeroRun(:)):max(zeroRun(:)));
+            [BinaryTreeZR, ~, BinCodeZR, CodelengthsZR] = buildHuffman(pmfZR);
+
+            off_setZR = -min(zeroRun(:))+1;
+            off_setMV = -min(mv_indices(:))+1;
+
+            bytestream1 = enc_huffman_new(zeroRun+off_setZR, BinCodeZR, CodelengthsZR);
+            bytestream2 = enc_huffman_new(mv_indices+off_setMV, BinCodeMV, CodelengthsMV);
+
+            dec_bytestream1 = double(reshape(dec_huffman_new(bytestream1, BinaryTreeZR, max(size(zeroRun(:)))), size(zeroRun)))-off_setZR;
+            dec_bytestream2 = double(reshape(dec_huffman_new(bytestream2, BinaryTreeMV, max(size(mv_indices(:)))), size(mv_indices)))-off_setMV;
+
+            bpp1 = (numel(bytestream1)*8) / (numel(im)/3);
+            bpp2 = (numel(bytestream2)*8) / (numel(im)/3);
+
+            dec_err_im = IntraDecode(zeroRun, size(err_im), qScale, EoB, 0, true);
+
+        catch
             zeroRun= IntraEncode(err_im, qScale, EoB, 1, true);
-%         else
-%             zeroRun= IntraEncode(err_im, qScale, EoB, 0, true);
-%         end
-        
-        if isequal(i, 2)
-            pmfMV = stats_marg(mv_indices, min(mv_indices(:)):max(mv_indices(:)));
-            [BinaryTreeMV, ~, BinCodeMV, CodelengthsMV] = buildHuffman(pmfMV);
-        end
+            if isequal(i, 2)
+                pmfMV = stats_marg(mv_indices, min(mv_indices(:)):max(mv_indices(:)));
+                [BinaryTreeMV, ~, BinCodeMV, CodelengthsMV] = buildHuffman(pmfMV);
+            end
 
-        pmfZR = stats_marg(zeroRun, min(zeroRun(:)):max(zeroRun(:)));
-        [BinaryTreeZR, ~, BinCodeZR, CodelengthsZR] = buildHuffman(pmfZR);
+            pmfZR = stats_marg(zeroRun, min(zeroRun(:)):max(zeroRun(:)));
+            [BinaryTreeZR, ~, BinCodeZR, CodelengthsZR] = buildHuffman(pmfZR);
 
-        off_setZR = -min(zeroRun(:))+1;
-        off_setMV = -min(mv_indices(:))+1;
+            off_setZR = -min(zeroRun(:))+1;
+            off_setMV = -min(mv_indices(:))+1;
 
-        bytestream1 = enc_huffman_new(zeroRun+off_setZR, BinCodeZR, CodelengthsZR);
-        bytestream2 = enc_huffman_new(mv_indices+off_setMV, BinCodeMV, CodelengthsMV);
+            bytestream1 = enc_huffman_new(zeroRun+off_setZR, BinCodeZR, CodelengthsZR);
+            bytestream2 = enc_huffman_new(mv_indices+off_setMV, BinCodeMV, CodelengthsMV);
 
-        dec_bytestream1 = double(reshape(dec_huffman_new(bytestream1, BinaryTreeZR, max(size(zeroRun(:)))), size(zeroRun)))-off_setZR;
-        dec_bytestream2 = double(reshape(dec_huffman_new(bytestream2, BinaryTreeMV, max(size(mv_indices(:)))), size(mv_indices)))-off_setMV;
+            dec_bytestream1 = double(reshape(dec_huffman_new(bytestream1, BinaryTreeZR, max(size(zeroRun(:)))), size(zeroRun)))-off_setZR;
+            dec_bytestream2 = double(reshape(dec_huffman_new(bytestream2, BinaryTreeMV, max(size(mv_indices(:)))), size(mv_indices)))-off_setMV;
 
-        bpp1 = (numel(bytestream1)*8) / (numel(im)/3);
-        bpp2 = (numel(bytestream2)*8) / (numel(im)/3);
-
-%         if and(isequal(qScale, 0.2), isequal(i, 9))
+            bpp1 = (numel(bytestream1)*8) / (numel(im)/3);
+            bpp2 = (numel(bytestream2)*8) / (numel(im)/3);
             dec_err_im = IntraDecode(zeroRun, size(err_im), qScale, EoB, 1, true);
-%         else
-%             dec_err_im = IntraDecode(zeroRun, size(err_im), qScale, EoB, 0, true);
-%         end
-        
+
+        end
+                
         ref_im = dec_err_im + rec_im;
         img_rec = ictYCbCr2RGB(ref_im);
         
@@ -91,4 +106,4 @@ ylabel('PSNR [dB]');
 
 hold on;
 plot(still_im_rate, still_im_psnr, 'rx-')
-set(gca,'XTick', 0:0.5:6);
+set(gca,'XTick', 0.0:0.5:6);
