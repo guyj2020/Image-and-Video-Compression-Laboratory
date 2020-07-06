@@ -1,6 +1,6 @@
-clear
+clear 
 clc
-close
+close 
 
 scales = [0.07, 0.2, 0.4, 0.8, 1.0, 1.5, 2, 3, 4, 4.5];
 EoB = 4000;
@@ -58,7 +58,7 @@ for s = 1:numel(scales)
             bpp1 = (numel(bytestream1)*8) / (numel(im)/3);
             bpp2 = (numel(bytestream2)*8) / (numel(im)/3);
 
-            dec_err_im = IntraDecode(zeroRun, size(err_im), qScale, EoB, 0, true);
+            dec_err_im = IntraDecode(dec_bytestream1, size(err_im), qScale, EoB, 0, true);
 
         catch
             zeroRun= IntraEncode(err_im, qScale, EoB, 1, true);
@@ -81,11 +81,13 @@ for s = 1:numel(scales)
 
             bpp1 = (numel(bytestream1)*8) / (numel(im)/3);
             bpp2 = (numel(bytestream2)*8) / (numel(im)/3);
-            dec_err_im = IntraDecode(zeroRun, size(err_im), qScale, EoB, 1, true);
+            dec_err_im = IntraDecode(dec_bytestream1, size(err_im), qScale, EoB, 1, true);
 
         end
-                
-        ref_im = dec_err_im + rec_im;
+        
+        dec_rec_im = SSD_rec(ref_im, dec_bytestream2);
+
+        ref_im = dec_err_im + dec_rec_im;%rec_im;
         img_rec = ictYCbCr2RGB(ref_im);
         
         rate(i) = bpp1 + bpp2;
