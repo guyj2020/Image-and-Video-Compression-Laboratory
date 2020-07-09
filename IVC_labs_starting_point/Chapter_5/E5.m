@@ -15,21 +15,24 @@ rate = zeros(length(frames), 1);
 final_rate = zeros(size(scales, 2), 1);
 final_psnr = zeros(size(scales, 2), 1);
 
-still_im_rate = zeros(size(scales, 2), 1);
-still_im_psnr = zeros(size(scales, 2), 1);
+still_im_rate = zeros(length(frames), 1);
+still_im_psnr = zeros(length(frames), 1);
+
+final_still_rate = zeros(size(scales, 2), 1);
+final_still_psnr = zeros(size(scales, 2), 1);
 
 for s = 1:numel(scales)
     qScale = scales(s);
     for i = 1:length(frames)
         im = double(imread(fullfile(directory, frames(i).name)));
         im1 = ictRGB2YCbCr(im);
-        if i == 1     % Encode and decode the 1st frame
+        [PSNR, BPP, ref_rgb_im, ~, ~, ~, k_small_min] = dctScript(im, qScale, EoB);
+        still_im_rate(i) = BPP;
+        still_im_psnr(i) = PSNR;
 
-            [PSNR, BPP, ref_rgb_im, ~, ~, ~, k_small_min] = dctScript(im, qScale, EoB);
+        if i == 1     % Encode and decode the 1st frame
             psnr(i) = PSNR;
             rate(i) = BPP;
-            still_im_rate(s) = BPP;
-            still_im_psnr(s) = PSNR;
             ref_im = ictRGB2YCbCr(ref_rgb_im);            
             continue;
         end
@@ -93,7 +96,9 @@ for s = 1:numel(scales)
         rate(i) = bpp1 + bpp2;
         psnr(i) = calcPSNR(im, img_rec);
     end
-
+    final_still_rate(s) = mean(still_im_rate);
+    final_still_psnr(s) = mean(still_im_psnr);
+    
     final_rate(s) = mean(rate);
     final_psnr(s) = mean(psnr);
     fprintf('Final Results: \n');
@@ -101,11 +106,11 @@ for s = 1:numel(scales)
     
 end
 
-
+figure;
 plot(final_rate, final_psnr, 'bx-')
 xlabel("bpp");
 ylabel('PSNR [dB]');
 
 hold on;
-plot(still_im_rate, still_im_psnr, 'rx-')
+plot(final_still_rate, final_still_psnr, 'rx-')
 set(gca,'XTick', 0.0:0.5:6);

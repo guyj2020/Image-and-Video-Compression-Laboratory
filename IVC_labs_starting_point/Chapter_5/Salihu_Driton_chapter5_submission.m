@@ -1,7 +1,7 @@
 scales = [0.07, 0.2, 0.4, 0.8, 1.0, 1.5, 2, 3, 4, 4.5];
 EoB = 4000;
 
-directory = fullfile('../../sequences', 'foreman20_40_RGB'); % path to src in the first part
+directory = fullfile('../sequences', 'foreman20_40_RGB'); % path to src in the first part
 path(path, directory)
 frames = dir(fullfile(directory,'*.bmp'));
 
@@ -11,21 +11,24 @@ rate = zeros(length(frames), 1);
 final_rate = zeros(size(scales, 2), 1);
 final_psnr = zeros(size(scales, 2), 1);
 
-still_im_rate = zeros(size(scales, 2), 1);
-still_im_psnr = zeros(size(scales, 2), 1);
+still_im_rate = zeros(length(frames), 1);
+still_im_psnr = zeros(length(frames), 1);
+
+final_still_rate = zeros(size(scales, 2), 1);
+final_still_psnr = zeros(size(scales, 2), 1);
 
 for s = 1:numel(scales)
     qScale = scales(s);
     for i = 1:length(frames)
         im = double(imread(fullfile(directory, frames(i).name)));
         im1 = ictRGB2YCbCr(im);
-        if i == 1     % Encode and decode the 1st frame
+        [PSNR, BPP, ref_rgb_im, ~, ~, ~, k_small_min] = dctScript(im, qScale, EoB);
+        still_im_rate(i) = BPP;
+        still_im_psnr(i) = PSNR;
 
-            [PSNR, BPP, ref_rgb_im, ~, ~, ~, k_small_min] = dctScript(im, qScale, EoB);
+        if i == 1     % Encode and decode the 1st frame
             psnr(i) = PSNR;
             rate(i) = BPP;
-            still_im_rate(s) = BPP;
-            still_im_psnr(s) = PSNR;
             ref_im = ictRGB2YCbCr(ref_rgb_im);            
             continue;
         end
@@ -89,7 +92,9 @@ for s = 1:numel(scales)
         rate(i) = bpp1 + bpp2;
         psnr(i) = calcPSNR(im, img_rec);
     end
-
+    final_still_rate(s) = mean(still_im_rate);
+    final_still_psnr(s) = mean(still_im_psnr);
+    
     final_rate(s) = mean(rate);
     final_psnr(s) = mean(psnr);
     fprintf('Final Results: \n');
@@ -97,13 +102,13 @@ for s = 1:numel(scales)
     
 end
 
-
+figure;
 plot(final_rate, final_psnr, 'bx-')
 xlabel("bpp");
 ylabel('PSNR [dB]');
 
 hold on;
-plot(still_im_rate, still_im_psnr, 'rx-')
+plot(final_still_rate, final_still_psnr, 'rx-')
 set(gca,'XTick', 0.0:0.5:6);
 
 %% All Functions
@@ -578,5 +583,185 @@ function dst = ZeroRunDec(src)
             index = index + 1;
         end
     end
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Huffman %%%%%%%%%%%%%%%%%%%%%%%%%%
+%--------------------------------------------------------------
+%
+%
+%
+%           %%%    %%%       %%%      %%%%%%%%
+%           %%%    %%%      %%%     %%%%%%%%%            
+%           %%%    %%%     %%%    %%%%
+%           %%%    %%%    %%%    %%%
+%           %%%    %%%   %%%    %%%
+%           %%%    %%%  %%%    %%%
+%           %%%    %%% %%%    %%%
+%           %%%    %%%%%%    %%%
+%           %%%    %%%%%     %%% 
+%           %%%    %%%%       %%%%%%%%%%%%
+%           %%%    %%%          %%%%%%%%%   BUILDHUFFMAN.M
+%
+%
+% description:  creatre a huffman table from a given distribution
+%
+% input:        PMF               - probabilty mass function of the source
+%
+% returnvalue:  BinaryTree        - cell structure containing the huffman tree
+%               HuffCode          - Array of integers containing the huffman tree
+%               BinCode           - Matrix containing the binary version of the code
+%               Codelengths       - Array with number of bits in each Codeword
+%
+% Course:       Image and Video Compression
+%               Prof. Eckehard Steinbach
+%
+% Author:       Dipl.-Ing. Ingo Bauermann 
+%               02.01.2003 (created)
+%
+%-----------------------------------------------------------------------------------
+
+
+function [ BinaryTree, HuffCode, BinCode, Codelengths] = buildHuffman( p );
+
+global y
+
+p=p(:)/sum(p)+eps;              % normalize histogram
+p1=p;                           % working copy
+
+c=cell(length(p1),1);			% generate cell structure 
+
+for i=1:length(p1)				% initialize structure
+   c{i}=i;						
+end
+
+while size(c)-2					% build Huffman tree
+	[p1,i]=sort(p1);			% Sort probabilities
+	c=c(i);						% Reorder tree.
+	c{2}={c{1},c{2}};           % merge branch 1 to 2
+    c(1)=[];	                % omit 1
+	p1(2)=p1(1)+p1(2);          % merge Probabilities 1 and 2 
+    p1(1)=[];	                % remove 1
+end
+
+%cell(length(p),1);              % generate cell structure
+getcodes(c,[]);                  % recurse to find codes
+code=char(y);
+
+[numCodes maxlength] = size(code); % get maximum codeword length
+
+% generate byte coded huffman table
+% code
+
+length_b=0;
+HuffCode=zeros(1,numCodes);
+for symbol=1:numCodes
+    for bit=1:maxlength
+        length_b=bit;
+        if(code(symbol,bit)==char(49)) HuffCode(symbol) = HuffCode(symbol)+2^(bit-1)*(double(code(symbol,bit))-48);
+        elseif(code(symbol,bit)==char(48))
+        else 
+            length_b=bit-1;
+            break;
+        end;
+    end;
+    Codelengths(symbol)=length_b;
+end;
+
+BinaryTree = c;
+BinCode = code;
+
+clear global y;
+
+return
+end
+
+%----------------------------------------------------------------
+function getcodes(a,dum)       
+global y                            % in every level: use the same y
+if isa(a,'cell')                    % if there are more branches...go on
+         getcodes(a{1},[dum 0]);    % 
+         getcodes(a{2},[dum 1]);
+else   
+   y{a}=char(48+dum);   
+end
+end
+
+%--------------------------------------------------------------
+%
+%
+%
+%           %%%    %%%       %%%      %%%%%%%%
+%           %%%    %%%      %%%     %%%%%%%%%
+%           %%%    %%%     %%%    %%%%
+%           %%%    %%%    %%%    %%%
+%           %%%    %%%   %%%    %%%
+%           %%%    %%%  %%%    %%%
+%           %%%    %%% %%%    %%%
+%           %%%    %%%%%%    %%%
+%           %%%    %%%%%     %%%
+%           %%%    %%%%       %%%%%%%%%%%%
+%           %%%    %%%          %%%%%%%%%   BUILDHUFFMAN.M
+%
+%
+% description:  creatre a huffman table from a given distribution
+%
+% input:        data              - Data to be encoded (indices to codewords!!!!
+%               BinCode           - Binary version of the Code created by buildHuffman
+%               Codelengths       - Array of Codelengthes created by buildHuffman
+%
+% returnvalue:  bytestream        - the encoded bytestream
+%
+% Course:       Image and Video Compression
+%               Prof. Eckehard Steinbach
+%
+%-----------------------------------------------------------------------------------
+
+function [bytestream] = enc_huffman_new( data, BinCode, Codelengths)
+
+a = BinCode(data(:),:)';
+b = a(:);
+mat = zeros(ceil(length(b)/8)*8,1);
+p  = 1;
+for i = 1:length(b)
+    if b(i)~=' '
+        mat(p,1) = b(i)-48;
+        p = p+1;
+    end
+end
+p = p-1;
+mat = mat(1:ceil(p/8)*8);
+d = reshape(mat,8,ceil(p/8))';
+multi = [1 2 4 8 16 32 64 128];
+bytestream = sum(d.*repmat(multi,size(d,1),1),2);
+
+end
+
+function [output] = dec_huffman_new (bytestream, BinaryTree, nr_symbols)
+
+output = zeros(1,nr_symbols);
+ctemp = BinaryTree;
+
+dec = zeros(size(bytestream,1),8);
+for i = 8:-1:1
+    dec(:,i) = rem(bytestream,2);
+    bytestream = floor(bytestream/2);
+end
+
+dec = dec(:,end:-1:1)';
+a = dec(:);
+
+i = 1;
+p = 1;
+while(i <= nr_symbols)&&p<=max(size(a))
+    while(isa(ctemp,'cell'))
+        next = a(p)+1;
+        p = p+1;
+        ctemp = ctemp{next};
+    end;
+    output(i) = ctemp;
+    ctemp = BinaryTree;
+    i=i+1;
+end;
 end
 
