@@ -1,4 +1,4 @@
-function coeff = InvIntTrafo4x4(block, QP)
+function coeff = InvIntTrafoQuant4x4(block, QP)
 %  Function Name : IInt4x4.m
 %  Input         : coeff (Integer DCT Coefficients) 4*4*3
 %  Output        : block (original image block) 4*4*3
