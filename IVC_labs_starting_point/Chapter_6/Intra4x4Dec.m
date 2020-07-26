@@ -2,16 +2,15 @@ function I_frameDec = Intra4x4Dec(I_frameEnc, QP, modesPred)
 
 I_frameDecInt = blockproc(I_frameEnc, [4, 4], @(block_struct) InvIntTrafoQuant4x4(block_struct.data, QP));
 % I_frameDec = blockproc(I_frameDecInt, [16, 16], @(block_struct) MacroBlock(block_struct.data));
-
+I_frameDec = zeros(size(I_frameEnc));
 idx = 1;
 for i = 1:16:size(I_frameDecInt, 1)
     for j = 1:16:size(I_frameDecInt, 2)
-        [I_frameDec(j:j+15, i:i+15), idx] = MacroBlock(I_frameDecInt(j:j+15, i:i+15), ...
+        [I_frameDec(i:i+15, j:j+15), idx] = MacroBlock(I_frameDecInt(i:i+15, j:j+15), ...
                                                        modesPred, idx);
+
     end
 end
-disp("Okay")
-
 end
 
 function [macroblock, idx] = MacroBlock(block16x16, modesPred, idx)
@@ -66,35 +65,19 @@ function blockEnc = Intra4x4(block4x4, loc, block16x16, mode)
             blockEnc = predVert(block4x4, block16x16, loc);
         elseif mode == 2
             blockEnc = predDC(block4x4, block16x16, loc);
+        elseif mode == 3
+            blockEnc = predDDL(block4x4, block16x16, loc);
+        elseif mode == 4
+            blockEnc = predDDR(block4x4, block16x16, loc);
+        elseif mode == 5
+            blockEnc = predVR(block4x4, block16x16, loc);
+        elseif mode == 6
+            blockEnc = predHD(block4x4, block16x16, loc);
+        elseif mode == 7
+            blockEnc = predVL(block4x4, block16x16, loc);
+        elseif mode == 8
+            blockEnc = predHU(block4x4, block16x16, loc);
         end
-%         ssd = inf;
-% 
-%         %Horizontal
-%         pred_imHor = predHor(block4x4, block16x16, loc);
-%         ssdHor = sum(abs(pred_imHor(:)));
-%         if ssdHor < ssd
-%             ssd = ssdHor;
-%             blockEnc = pred_imHor;
-%         end
-% 
-%         % Vertical
-%         pred_imVert = predVert(block4x4, block16x16, loc);
-%         ssdVert = sum(abs(pred_imVert(:)));
-%         if ssdVert < ssd
-%             ssd = ssdVert;
-%             blockEnc = pred_imVert;
-%         end
-% 
-%         % DC - Mean
-%         pred_imDC = predDC(block4x4, block16x16, loc);
-%         ssdDC = sum(abs(pred_imDC(:)));
-%         if ssdDC < ssd
-%             ssd = ssdDC;
-%             blockEnc = pred_imDC;
-%         end
-
-        % TODO: ADD All modes
-
     end
 
 end
@@ -111,9 +94,94 @@ function pred_im = predDC(block4x4, block16x16, loc)
     pred_im = block4x4 + round(mean([block16x16(loc(1)-1, 1:4), block16x16(1:4, loc(2)-1)']));
 end
 
+function pred_im = predDDL(block4x4, block16x16, loc)
+    block16x16 = padarray(block16x16', 4, 'post', 'replicate')';
+    B = block16x16(loc(1)-1, loc(2)+1);
+    C = block16x16(loc(1)-1, loc(2)+2);
+    D = block16x16(loc(1)-1, loc(2)+3);
+    E = block16x16(loc(1)-1, loc(2)+4);
+    F = block16x16(loc(1)-1, loc(2)+5);
+    G = block16x16(loc(1)-1, loc(2)+6);
+    H = block16x16(loc(1)-1, loc(2)+7);
+    ddl_pred  = [B, C, D, E;
+                 C, D, E, F;
+                 D, E, F, G;
+                 E, F, G, H];
+    pred_im = block4x4 + ddl_pred;
+end
 
+function pred_im = predDDR(block4x4, block16x16, loc)    
+    M = block16x16(loc(1)-1, loc(2)-1);
+    A = block16x16(loc(1)-1, loc(2));
+    B = block16x16(loc(1)-1, loc(2)+1);
+    C = block16x16(loc(1)-1, loc(2)+2);
+    
+    I = block16x16(loc(1), loc(2)-1);
+    J = block16x16(loc(1)+1, loc(2)-1);
+    K = block16x16(loc(1)+2, loc(2)-1);
 
+    ddr_pred  = [M, A, B, C;
+                 I, M, A, B;
+                 J, I, M, A;
+                 K, J, I, M];
+    pred_im = block4x4 + ddr_pred;
+end
 
+function pred_im = predVR(block4x4, block16x16, loc)  
+    M = block16x16(loc(1)-1, loc(2)-1);
+    A = block16x16(loc(1)-1, loc(2));
+    B = block16x16(loc(1)-1, loc(2)+1);
+    C = block16x16(loc(1)-1, loc(2)+2);
+    J = block16x16(loc(1)+1, loc(2)-1);
 
+    vr_pred  =  [M, A, B, C;
+                 M, A, B, C;
+                 J, M, A, B;
+                 J, M, A, B];
+    pred_im = block4x4 + vr_pred;
+end
+
+function pred_im = predHD(block4x4, block16x16, loc)    
+    M = block16x16(loc(1)-1, loc(2)-1);
+    B = block16x16(loc(1)-1, loc(2)+1);
+    J = block16x16(loc(1)+1, loc(2)-1);
+    K = block16x16(loc(1)+2, loc(2)-1);
+    L = block16x16(loc(1)+3, loc(2)-1);
+
+    hd_pred   = [M, M, B, B;
+                 J, J, M, M;
+                 K, K, J, J;
+                 L, L, K, K];
+    pred_im = block4x4 + hd_pred;
+end
+
+function pred_im = predVL(block4x4, block16x16, loc) 
+    block16x16 = padarray(block16x16', 1, 'post', 'replicate')';
+
+    A = block16x16(loc(1)-1, loc(2));
+    B = block16x16(loc(1)-1, loc(2)+1);
+    C = block16x16(loc(1)-1, loc(2)+2);
+    D = block16x16(loc(1)-1, loc(2)+3);
+    E = block16x16(loc(1)-1, loc(2)+4);
+
+    vl_pred   = [A, B, C, D;
+                 A, B, C, D;
+                 B, C, D, E;
+                 B, C, D, E];
+    pred_im = block4x4 + vl_pred;
+end
+
+function pred_im = predHU(block4x4, block16x16, loc) 
+    I = block16x16(loc(1), loc(2)-1);
+    J = block16x16(loc(1)+1, loc(2)-1);
+    K = block16x16(loc(1)+2, loc(2)-1);
+    L = block16x16(loc(1)+3, loc(2)-1);
+
+    hu_pred   = [I, I, J, J;
+                 J, J, K, K;
+                 K, K, L, L;
+                 L, L, L, L];
+    pred_im = block4x4 + hu_pred;
+end
 
 
