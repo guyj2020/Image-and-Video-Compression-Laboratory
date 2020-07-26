@@ -1,16 +1,35 @@
-function [I_frameEnc] = Intra4x4Enc(imgY, QP)
+function [I_frameEnc, modesPred] = Intra4x4Enc(imgY, QP)
+% Because blockproc is to random in it's approach of doing things-- for
+% loops instead
+modesPred = [];
+I_frameEnc = zeros(size(imgY));
+for x = 1:16:size(imgY, 1)
+    for y = 1:16:size(imgY, 2)
+        block16x16 = imgY(x:x+15, y:y+15);
+        block16x16Enc = zeros(size(block16x16));
+        for i = 1:4:16
+            for j = 1:4:16
+                block4x4 = block16x16(i:i+3, j:j+3);
+                loc = [i, j];
+                [block16x16Enc(i:i+3, j:j+3), modesPred] = Intra4x4(block4x4, loc, QP, block16x16, modesPred);
+            end
+        end
+        I_frameEnc(x:x+15, y:y+15) = block16x16Enc;
+    end
+end
 
-I_frameEnc = blockproc(imgY, [16, 16], @(block_struct) MacroBlock(block_struct.data, QP));
 
-disp("Okay")
+% I_frameEnc = blockproc(imgY, [16, 16], @(block_struct) MacroBlock(block_struct.data, QP));
+
 end
 
 function macroblock = MacroBlock(block, QP)
 macroblock = blockproc(block, [4, 4], @(block_struct) Intra4x4(block_struct.data, block_struct.location, QP, block));
 end
 
-function blockEnc = Intra4x4(block4x4, loc, QP, block16x16)
-global modesPred
+function [blockEnc, modesPred] = Intra4x4(block4x4, loc, QP, block16x16, modesPred)
+% function blockEnc = Intra4x4(block4x4, loc, QP, block16x16)
+% global modesPred
 
 if all(loc == [1, 1])
     blockEnc = IntTrafoQuant4x4(block4x4, QP);

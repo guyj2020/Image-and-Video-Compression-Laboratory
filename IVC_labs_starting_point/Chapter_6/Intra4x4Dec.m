@@ -6,10 +6,11 @@ I_frameDecInt = blockproc(I_frameEnc, [4, 4], @(block_struct) InvIntTrafoQuant4x
 idx = 1;
 for i = 1:16:size(I_frameDecInt, 1)
     for j = 1:16:size(I_frameDecInt, 2)
-        [I_frameDec(i:i+15, j:j+15), idx] = MacroBlock(I_frameDecInt(i:i+15, j:j+15), ...
+        [I_frameDec(j:j+15, i:i+15), idx] = MacroBlock(I_frameDecInt(j:j+15, i:i+15), ...
                                                        modesPred, idx);
     end
 end
+disp("Okay")
 
 end
 

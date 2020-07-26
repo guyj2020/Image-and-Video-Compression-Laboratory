@@ -15,24 +15,27 @@
 % errim
 % rec_errim
 
-clear global
+% clear global
 clear 
 clc
 
-global modesPred
+% global modesPred
 
 lena_smallRGB = double(imread('lena_small.tif'));
 lena_small = ictRGB2YCbCr(double(imread('lena_small.tif')));
 imgY = lena_small(:, :, 1);
 QP = 1;
-[I_frame] = Intra4x4Enc(imgY, QP);
+[I_frame, modesPred] = Intra4x4Enc(imgY, QP);
+
+
+% DECODE
 rec_I_frame = Intra4x4Dec(I_frame, QP, modesPred);
 
 
+% EVALUATE
 a = lena_small;
 a(:, :, 1) = rec_I_frame;
 calcPSNR(lena_smallRGB, ictYCbCr2RGB(a))
-
-
+imshow(uint8(ictYCbCr2RGB(a)))
 
 
