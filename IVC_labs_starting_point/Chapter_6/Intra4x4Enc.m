@@ -48,81 +48,81 @@ else
     
     %Horizontal
     pred_imHor = predHor(block4x4, block16x16, loc);
-    ssdHor = sum(abs(pred_imHor(:)));
-    if ssdHor < ssd
-        ssd = ssdHor;
+    sadHor = sum(abs(pred_imHor(:)));
+    if sadHor < ssd
+        ssd = sadHor;
         pred_im = pred_imHor;
         mode = 0;
     end
     
     % Vertical
     pred_imVert = predVert(block4x4, block16x16, loc);
-    ssdVert = sum(abs(pred_imVert(:)));
-    if ssdVert < ssd
-        ssd = ssdVert;
+    sadVert = sum(abs(pred_imVert(:)));
+    if sadVert < ssd
+        ssd = sadVert;
         pred_im = pred_imVert;
         mode = 1;
     end
     
     % DC - Mean
     pred_imDC = predDC(block4x4, block16x16, loc);
-    ssdDC = sum(abs(pred_imDC(:)));
-    if ssdDC < ssd
-        ssd = ssdDC;
+    sadDC = sum(abs(pred_imDC(:)));
+    if sadDC < ssd
+        ssd = sadDC;
         pred_im = pred_imDC;
         mode = 2;
     end
     
     % Diag Down Left
     pred_imDDL = predDDL(block4x4, block16x16, loc);
-    ssdDDL = sum(abs(pred_imDDL(:)));
-    if ssdDDL < ssd
-        ssd = ssdDDL;
+    sadDDL = sum(abs(pred_imDDL(:)));
+    if sadDDL < ssd
+        ssd = sadDDL;
         pred_im = pred_imDDL;
         mode = 3;
     end
     
     % Diag Down Right
     pred_imDDR = predDDR(block4x4, block16x16, loc);
-    ssdDDR = sum(abs(pred_imDDR(:)));
-    if ssdDDR < ssd
-        ssd = ssdDDR;
+    sadDDR = sum(abs(pred_imDDR(:)));
+    if sadDDR < ssd
+        ssd = sadDDR;
         pred_im = pred_imDDR;
         mode = 4;
     end
     
     % Vertical Right
     pred_imVR = predVR(block4x4, block16x16, loc);
-    ssdVR = sum(abs(pred_imVR(:)));
-    if ssdVR < ssd
-        ssd = ssdVR;
+    sadVR = sum(abs(pred_imVR(:)));
+    if sadVR < ssd
+        ssd = sadVR;
         pred_im = pred_imVR;
         mode = 5;
     end
     
     % Horizontal Down
     pred_imHD = predHD(block4x4, block16x16, loc);
-    ssdHD = sum(abs(pred_imHD(:)));
-    if ssdHD < ssd
-        ssd = ssdHD;
+    sadHD = sum(abs(pred_imHD(:)));
+    if sadHD < ssd
+        ssd = sadHD;
         pred_im = pred_imHD;
         mode = 6;
     end
         
     % Virtual Left
     pred_imVL = predVL(block4x4, block16x16, loc);
-    ssdVL = sum(abs(pred_imVL(:)));
-    if ssdVL < ssd
-        ssd = ssdVL;
+    sadVL = sum(abs(pred_imVL(:)));
+    if sadVL < ssd
+        ssd = sadVL;
         pred_im = pred_imVL;
         mode = 7;
     end
     
     % Horizontal Up
     pred_imHU = predHU(block4x4, block16x16, loc);
-    ssdUP = sum(abs(pred_imHU(:)));
-    if ssdUP < ssd
-        ssd = ssdUP;
+    sadUP = sum(abs(pred_imHU(:)));
+    if sadUP < ssd
+        ssd = sadUP;
         pred_im = pred_imHU;
         mode = 8;
     end
