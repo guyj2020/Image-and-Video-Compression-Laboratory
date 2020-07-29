@@ -132,42 +132,63 @@ function pred_im = predVR(block4x4, block16x16, loc)
     A = block16x16(loc(1)-1, loc(2));
     B = block16x16(loc(1)-1, loc(2)+1);
     C = block16x16(loc(1)-1, loc(2)+2);
+    D = block16x16(loc(1)-1, loc(2)+3);
+    MA = mean([M, A]);
+    AB = mean([B, A]);
+    BC = mean([C, B]);
+    CD = mean([C, D]);
+    
+    I = block16x16(loc(1)+1, loc(2)-1);
     J = block16x16(loc(1)+1, loc(2)-1);
 
-    vr_pred  =  [M, A, B, C;
+    vr_pred  =  [MA, AB, BC, CD;
                  M, A, B, C;
-                 J, M, A, B;
+                 I, MA, AB, BC;
                  J, M, A, B];
     pred_im = block4x4 + vr_pred;
 end
 
 function pred_im = predHD(block4x4, block16x16, loc)    
     M = block16x16(loc(1)-1, loc(2)-1);
+    A = block16x16(loc(1)-1, loc(2));
     B = block16x16(loc(1)-1, loc(2)+1);
+    I = block16x16(loc(1), loc(2)-1);
     J = block16x16(loc(1)+1, loc(2)-1);
     K = block16x16(loc(1)+2, loc(2)-1);
     L = block16x16(loc(1)+3, loc(2)-1);
+    
+    MI = mean([M, I]);
+    IJ = mean([I, J]);
+    JK = mean([J, K]);
+    KL = mean([K, L]);
 
-    hd_pred   = [M, M, B, B;
-                 J, J, M, M;
-                 K, K, J, J;
-                 L, L, K, K];
+    hd_pred   = [MI, M, A, B;
+                 IJ, I, MI, M;
+                 JK, J, IJ, I;
+                 KL, K, JK, J];
     pred_im = block4x4 + hd_pred;
 end
 
 function pred_im = predVL(block4x4, block16x16, loc) 
-    block16x16 = padarray(block16x16', 1, 'post', 'replicate')';
+    block16x16 = padarray(block16x16', 2, 'post', 'replicate')';
 
     A = block16x16(loc(1)-1, loc(2));
     B = block16x16(loc(1)-1, loc(2)+1);
     C = block16x16(loc(1)-1, loc(2)+2);
     D = block16x16(loc(1)-1, loc(2)+3);
     E = block16x16(loc(1)-1, loc(2)+4);
+    F = block16x16(loc(1)-1, loc(2)+5);
+    
+    AB = mean([A, B]);
+    BC = mean([B, C]);
+    CD = mean([C, D]);
+    DE = mean([D, E]);
+    EF = mean([E, F]);
 
-    vl_pred   = [A, B, C, D;
+    vl_pred   = [AB, BC, CD, DE;
                  A, B, C, D;
-                 B, C, D, E;
-                 B, C, D, E];
+                 BC, CD, DE, EF;
+                 C, D, E, F];
     pred_im = block4x4 + vl_pred;
 end
 
@@ -177,11 +198,13 @@ function pred_im = predHU(block4x4, block16x16, loc)
     K = block16x16(loc(1)+2, loc(2)-1);
     L = block16x16(loc(1)+3, loc(2)-1);
 
-    hu_pred   = [I, I, J, J;
-                 J, J, K, K;
-                 K, K, L, L;
+    IJ = mean([I, J]);
+    JK = mean([J, K]);
+    KL = mean([K, L]);
+    
+    hu_pred   = [IJ, J, JK, L;
+                 JK, K, KL, L;
+                 KL, L, L, L;
                  L, L, L, L];
     pred_im = block4x4 + hu_pred;
 end
-
-
