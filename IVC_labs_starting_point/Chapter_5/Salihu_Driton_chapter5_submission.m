@@ -1,7 +1,7 @@
 scales = [0.07, 0.2, 0.4, 0.8, 1.0, 1.5, 2, 3, 4, 4.5];
 EoB = 4000;
 
-directory = fullfile('../sequences', 'foreman20_40_RGB'); % path to src in the first part
+directory = fullfile('../../sequences', 'foreman20_40_RGB'); % path to src in the first part
 path(path, directory)
 frames = dir(fullfile(directory,'*.bmp'));
 
@@ -102,7 +102,8 @@ for s = 1:numel(scales)
     
 end
 
-figure;
+% figure;
+hold on
 plot(final_rate, final_psnr, 'bx-')
 xlabel("bpp");
 ylabel('PSNR [dB]');
