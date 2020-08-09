@@ -3,64 +3,90 @@ function [I_frameCbCrDec, modesPred] = Intra8x8CbCrDec(imgCbCr, QP, modesPred)
 I_frameDecInt = blockproc(imgCbCr, [4, 4], @(block_struct) InvIntTrafoQuant4x4(block_struct.data, QP));
 I_frameCbCrDec = zeros(size(imgCbCr));
 idx = 1;
-for i = 1:16:size(I_frameDecInt, 1)
-    for j = 1:16:size(I_frameDecInt, 2)
-        [I_frameCbCrDec(i:i+15, j:j+15), idx] = MacroBlock(I_frameDecInt(i:i+15, j:j+15), ...
-                                                       modesPred, idx);
-    end
-end
+for x = 1:16:size(I_frameDecInt, 1)
+    for y = 1:16:size(I_frameDecInt, 2)
+        block16x16 = I_frameDecInt(x:x+15, y:y+15);
+        block16x16Dec = zeros(size(block16x16));
+        for i = 1:8:16
+            for j = 1:8:16
+                loc = [i, j];
+                block8x8 = block16x16(i:i+7, j:j+7);
+                if all(loc == [1, 1])
+                    block16x16Dec(i:i+7, j:j+7) = block8x8;
+                elseif loc(1) == 1
+                    pred_im = predH(block8x8, block16x16, loc);
+                    block16x16Dec(i:i+7, j:j+7) = pred_im;  
+                elseif loc(2) == 1
+                    pred_im = predV(block8x8, block16x16, loc);
+                    block16x16Dec(i:i+7, j:j+7) = pred_im;
+                else
+%                     [block16x16Dec(i:i+7, j:j+7), idx] = MacroBlock(block8x8, ...
+%                                                                    modesPred, idx);
+                    block16x16Dec(i:i+7, j:j+7) = Intra8x8(block8x8, block16x16, ...
+                                                           loc, modesPred(idx));
+                    idx = idx+1;
+                end
 
-end
-
-function [macroblock, idx] = MacroBlock(block16x16, modesPred, idx)
-    macroblock = zeros(size(block16x16));
-
-    for i = 1:4:16
-        for j = 1:4:16
-            macroblock(i:i+7, j:j+7) = Intra4x4(block16x16(i:i+7, j:j+7), ...
-                                                macroblock, modesPred(idx));
-            idx = idx+1;
+            end
         end
+        I_frameCbCrDec(x:x+15, y:y+15) = block16x16Dec;
+
+
+%             block16x16Enc(i:i+7, j:j+7) = block8x8;
+                            
+%         [I_frameCbCrDec(i:i+15, j:j+15), idx] = MacroBlock(I_frameDecInt(i:i+15, j:j+15), ...
+%                                                        modesPred, idx);
     end
-    
 end
 
-function blockEnc = Intra8x8(block4x4, block16x16, mode)
+end
+
+% function [macroblock, idx] = MacroBlock(block16x16, modesPred, idx)
+%     macroblock = zeros(size(block16x16));
+% 
+%     for i = 1:8:16
+%         for j = 1:8:16
+%             macroblock(i:i+7, j:j+7) = Intra8x8(block16x16(i:i+7, j:j+7), ...
+%                                                 modesPred(idx));
+%             idx = idx+1;
+%         end
+%     end
+%     
+% end
+
+function blockEnc = Intra8x8(block8x8, block16x16, loc, mode)
 
     if mode == 0
-        pred_im = predHor(block4x4, block16x16, loc);
+        blockEnc = predDC(block8x8, block16x16, loc);
     elseif mode == 1
-        pred_im = predVert(block4x4, block16x16, loc);
+        blockEnc = predH(block8x8, block16x16, loc);
     elseif mode == 2
-        pred_im = predDC(block4x4, block16x16, loc);
+        blockEnc = predV(block8x8, block16x16, loc);
     elseif mode == 3
-        pred_im = predPlane(block4x4, block16x16, loc);
+        blockEnc = predPlane(block8x8, block16x16, loc);
     end
-    blockEnc = block4x4 + pred_im;
 end
 
-function pre_imPlane = predPlane(block8x8)
-    pre_imPlane = triu(repmat(block8x8(1, :), [8, 1]), 1) + ...
-                  tril(repmat(block8x8(:, 1), [1, 8]));
+function pre_imPlane = predPlane(block8x8, block16x16, loc)
+    x = block16x16(loc(1)-1, 1:8);
+    y = block16x16(1:8, loc(2)-1);
+    pre_imPlaneMat = triu(repmat(x, [8, 1]), 1) + ...
+                  tril(repmat(y, [1, 8]));
+    pre_imPlane = block8x8 + pre_imPlaneMat;
 end
 
-function pre_imV = predV(block8x8)
-    pre_imV = zeros(size(block8x8));
-    pre_imV(1, :) = block8x8(1, :);
-    pre_imV(2:end, :) = repmat(block8x8(1, :), [7, 1]);
+function pred_im = predH(block8x8, block16x16, loc)
+    pred_im = block8x8 + repmat(block16x16(1:8, loc(2)-1), [1, 8]);
 end
 
-function pre_imH = predH(block8x8)
-    pre_imH = zeros(size(block8x8));
-    pre_imH(:, 1) = block8x8(:, 1);
-    pre_imH(:, 2:end) = repmat(block8x8(:, 1), [1, 7]);
+function pred_im = predV(block8x8, block16x16, loc)
+    pred_im = block8x8 + repmat(block16x16(loc(1)-1, 1:8), [8, 1]);
 end
 
-function pre_imDC = predDC(block8x8)
-    pre_imDC = zeros(size(block8x8));
-    pre_imDC(1, :) = block8x8(1, :);
-    pre_imDC(:, 1) = block8x8(:, 1);
-    pre_imDC(2:end, 2:end) = repmat(mean(block8x8(:, 1)' + block8x8(1, :)),...
-                                    [7, 7]);
+
+function pred_im = predDC(block8x8, block16x16, loc)
+    pred_im = block8x8 + mean([block16x16(loc(1)-1, 1:8), block16x16(1:8, loc(2)-1)']);
 end
+
+
 

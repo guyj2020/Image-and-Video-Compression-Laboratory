@@ -1,4 +1,4 @@
-function dst = IntraDecodeH264(image, img_size, modesPred, QP, EoB)
+function dst = IntraDecodeH264(image, img_size, modesPredY, modesPredCbCr, QP, EoB)
 %  Function Name : IntraDecode.m
 %  Input         : image (zero-run encoded image, 1xN)
 %                  img_size (original image size)
@@ -40,8 +40,9 @@ enc_zigzag_reshaped(:, :, 3) = enc_zigzag(:, sort(int_im3));
 
 
 dst = zeros(size(enc_zigzag_reshaped));
-for depth = 1:img_size(3)
-    dst(:, :, depth) = Intra4x4Dec(enc_zigzag_reshaped(:, :, depth), QP, modesPred(:, :, depth));
-end
+dst(:, :, 1) = Intra4x4Dec(enc_zigzag_reshaped(:, :, 1), QP, modesPredY);
+dst(:, :, 2) = Intra8x8CbCrDec(enc_zigzag_reshaped(:, :, 2), QP, modesPredCbCr(:, :, 1));
+dst(:, :, 3) = Intra8x8CbCrDec(enc_zigzag_reshaped(:, :, 3), QP, modesPredCbCr(:, :, 2));
+
 
 end

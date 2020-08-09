@@ -9,9 +9,23 @@ function [I_frameCbCr, modesPred] = Intra8x8CbCrEnc(imgCbCr, QP)
             block16x16Enc = zeros(size(block16x16));
             for i = 1:8:16
                 for j = 1:8:16
+                    loc = [i, j];
                     block8x8 = block16x16(i:i+7, j:j+7);
-                    [block16x16Enc(i:i+7, j:j+7), modesPred] = Intra8x8(block8x8, ...
-                                                                        modesPred);
+                    
+                    if all(loc == [1, 1])
+                        block16x16Enc(i:i+7, j:j+7) = block8x8;
+
+                    elseif loc(1) == 1
+                        pred_im = predH(block8x8, block16x16, loc);
+                        block16x16Enc(i:i+7, j:j+7) = pred_im;
+   
+                    elseif loc(2) == 1
+                        pred_im = predV(block8x8, block16x16, loc);
+                        block16x16Enc(i:i+7, j:j+7) = pred_im;
+                    else
+                        [block16x16Enc(i:i+7, j:j+7), modesPred] = Intra8x8(block8x8, block16x16, ...
+                                                                            modesPred, loc);
+                    end
                 end
             end
             I_frameCbCr(x:x+15, y:y+15) = block16x16Enc;
@@ -23,11 +37,11 @@ function [I_frameCbCr, modesPred] = Intra8x8CbCrEnc(imgCbCr, QP)
 end
 
 
-function [pred_im, modesPred] = Intra8x8(block8x8, modesPred)
+function [pred_im, modesPred] = Intra8x8(block8x8, block16x16, modesPred, loc)
     pred_im = zeros(size(block8x8));
     ssd = inf;
     % DC
-    pre_imDC = predDC(block8x8);
+    pre_imDC = predDC(block8x8, block16x16, loc);
     ssdDC = sum(abs(pre_imDC(:)));
     if ssdDC < ssd
         ssd = ssdDC;
@@ -36,7 +50,7 @@ function [pred_im, modesPred] = Intra8x8(block8x8, modesPred)
     end
 
     % Hor
-    pre_imH = predH(block8x8);
+    pre_imH = predH(block8x8, block16x16, loc);
     ssdH = sum(abs(pre_imH(:)));
     if ssdH < ssd
         ssd = ssdH;
@@ -45,7 +59,7 @@ function [pred_im, modesPred] = Intra8x8(block8x8, modesPred)
     end
     
     % Vert
-    pre_imV = predV(block8x8);
+    pre_imV = predV(block8x8, block16x16, loc);
     ssdV = sum(abs(pre_imV(:)));
     if ssdV < ssd
         ssd = ssdV;
@@ -54,7 +68,7 @@ function [pred_im, modesPred] = Intra8x8(block8x8, modesPred)
     end
     
     % Plane
-    pre_imPlane = predPlane(block8x8);
+    pre_imPlane =  predPlane(block8x8, block16x16, loc);
     ssdPlane = sum(abs(pre_imPlane(:)));
     if ssdPlane < ssd
         ssd = ssdPlane;
@@ -62,30 +76,27 @@ function [pred_im, modesPred] = Intra8x8(block8x8, modesPred)
         mode = 3;
     end
     
-    pred_im = block8x8 - pred_im;
+    modesPred(end+1) = mode;
 end
 
-function pre_imPlane = predPlane(block8x8)
-    pre_imPlane = triu(repmat(block8x8(1, :), [8, 1]), 1) + ...
-                  tril(repmat(block8x8(:, 1), [1, 8]));
+function pre_imPlane = predPlane(block8x8, block16x16, loc)
+    x = block16x16(loc(1)-1, 1:8);
+    y = block16x16(1:8, loc(2)-1);
+    pre_imPlaneMat = triu(repmat(x, [8, 1]), 1) + ...
+                  tril(repmat(y, [1, 8]));
+    pre_imPlane = block8x8 - pre_imPlaneMat;
 end
 
-function pre_imV = predV(block8x8)
-    pre_imV = zeros(size(block8x8));
-    pre_imV(1, :) = block8x8(1, :);
-    pre_imV(2:end, :) = repmat(block8x8(1, :), [7, 1]);
+function pred_im = predH(block8x8, block16x16, loc)
+    pred_im = block8x8 - repmat(block16x16(1:8, loc(2)-1), [1, 8]);
 end
 
-function pre_imH = predH(block8x8)
-    pre_imH = zeros(size(block8x8));
-    pre_imH(:, 1) = block8x8(:, 1);
-    pre_imH(:, 2:end) = repmat(block8x8(:, 1), [1, 7]);
+function pred_im = predV(block8x8, block16x16, loc)
+    pred_im = block8x8 - repmat(block16x16(loc(1)-1, 1:8), [8, 1]);
 end
 
-function pre_imDC = predDC(block8x8)
-    pre_imDC = zeros(size(block8x8));
-    pre_imDC(1, :) = block8x8(1, :);
-    pre_imDC(:, 1) = block8x8(:, 1);
-    pre_imDC(2:end, 2:end) = repmat(mean(block8x8(:, 1)' + block8x8(1, :)),...
-                                    [7, 7]);
+
+function pred_im = predDC(block8x8, block16x16, loc)
+    pred_im = block8x8 - mean([block16x16(loc(1)-1, 1:8), block16x16(1:8, loc(2)-1)']);
 end
+

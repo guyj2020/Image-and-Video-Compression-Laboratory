@@ -32,8 +32,9 @@ function coeff = InvIntTrafoQuant4x4(block, QP)
   
     coeff = zeros(size(block));
     for depth = 1:size(block, 3)
-        
         coeff(:, :, depth) = round(Ci' * (block(:, :, depth) .* Vi) * 2^floor(QP/6) * 1/2^6 * Ci);
+
+%         coeff(:, :, depth) = round(Ci' * (block(:, :, depth) .* Vi) * 2^floor(QP/6) * 1/2^6 * Ci);
     end
 
     
