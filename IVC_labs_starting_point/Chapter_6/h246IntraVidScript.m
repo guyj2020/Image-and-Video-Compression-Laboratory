@@ -14,7 +14,7 @@ bytestream = enc_huffman_new(k+off_set, BinCode, Codelengths);
 k_rec = double(reshape(dec_huffman_new(bytestream, BinaryTree, max(size(k(:)))), size(k)))-off_set;
 
 
-BPP = (numel(bytestream)*8) / (numel(img));
+BPP = (numel(bytestream)*8) / (numel(img)/3);
 % I_rec = IntraDecode(k_rec, size(img), qScale, EoB, 1);
 I_recYCbCr = IntraDecodeH264(k_rec, size(img), modesPredY, modesPredCbCr, QP, EoB);
 I_rec = ictYCbCr2RGB(I_recYCbCr);

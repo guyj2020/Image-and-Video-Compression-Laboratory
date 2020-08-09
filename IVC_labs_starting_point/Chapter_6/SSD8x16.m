@@ -12,9 +12,6 @@ end
 
 function motion_vector_indices = BlockSSDMV(block, loc, ref_image)
 
-if loc(1) == 33 && loc(2) == 193
-    disp("Oaky")
-end
 loc = loc + size(block)/2;
 sse_min = inf;
 best_loc = loc;
