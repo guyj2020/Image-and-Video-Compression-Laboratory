@@ -1,4 +1,4 @@
-function rec_image = SSDRec_h264(ref_image, MV_choice, mv_indices8x16, mv_indices16x8, mv_indices16x16, mv_indices8x8)
+function rec_image = SSDRec_h264(ref_image, MV_choice, mv_indices16x16, mv_indices)
 
 rec_image = zeros(size(ref_image));
 ref_image16x16 = padarray(ref_image, [8, 8], 'both', 'replicate');
@@ -9,7 +9,7 @@ idxY_8x8 = 1:2:2*size(MV_choice, 2);
 for idxX_choice = 1:size(MV_choice, 1)
     for idxY_choice = 1:size(MV_choice, 2)
         if MV_choice(idxX_choice, idxY_choice) == 1
-            mv_indice = mv_indices8x8(idxX_8x8(idxX_choice):idxX_8x8(idxX_choice)+1, ...
+            mv_indice = mv_indices(idxX_8x8(idxX_choice):idxX_8x8(idxX_choice)+1, ...
                                       idxY_8x8(idxY_choice):idxY_8x8(idxY_choice)+1);
                                   
             mv_indice16x16 = mv_indices16x16(idxX_choice, idxY_choice);
@@ -19,8 +19,7 @@ for idxX_choice = 1:size(MV_choice, 1)
             ref_XEnd16x16 = idxX_choice*16+mvX-1;
             ref_YStart16x16 = (idxY_choice-1)*16+mvY;
             ref_YEnd16x16 = idxY_choice*16+mvY-1;
-
-            
+                        
             for x = 1:size(mv_indice, 1)
                 for y = 1:size(mv_indice, 2)
                     ref_XStart = ref_XStart16x16 + (x-1)*8;
@@ -48,7 +47,7 @@ for idxX_choice = 1:size(MV_choice, 1)
             
             
         elseif MV_choice(idxX_choice, idxY_choice) == 2
-            mv_indice = mv_indices8x16(idxX_8x8(idxX_choice):idxX_8x8(idxX_choice)+1, ...
+            mv_indice = mv_indices(idxX_8x8(idxX_choice):idxX_8x8(idxX_choice)+1, ...
                                        idxY_choice);
                                   
             mv_indice16x16 = mv_indices16x16(idxX_choice, idxY_choice);
@@ -70,7 +69,7 @@ for idxX_choice = 1:size(MV_choice, 1)
             end
             
         elseif MV_choice(idxX_choice, idxY_choice) == 3
-            mv_indice = mv_indices16x8(idxX_choice, ...
+            mv_indice = mv_indices(idxX_choice, ...
                                       idxY_8x8(idxY_choice):idxY_8x8(idxY_choice)+1);
       
             mv_indice16x16 = mv_indices16x16(idxX_choice, idxY_choice);

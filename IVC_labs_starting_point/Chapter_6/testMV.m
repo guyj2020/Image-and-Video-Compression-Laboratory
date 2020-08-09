@@ -18,8 +18,9 @@ image = ictRGB2YCbCr(image);
 
 [MV_choice, mv_indices8x16, mv_indices16x8, mv_indices16x16, mv_indices8x8] = SSD_h264(reference_image(:, :, 1), image(:, :, 1));
 % rec_image = SSD_rec(reference_image, mv_indices);
+mv_indices = cut_motion_vect_mat(MV_choice, mv_indices16x16, mv_indices8x8, mv_indices8x16, mv_indices16x8);
 
-rec_image = SSDRec_h264(reference_image, MV_choice, mv_indices8x16, mv_indices16x8, mv_indices16x16, mv_indices8x8);
+rec_image = SSDRec_h264(reference_image, MV_choice, mv_indices16x16, mv_indices);
 
 calcPSNR(reference_image, rec_image)
 imshow(uint8(ictYCbCr2RGB(rec_image)))
