@@ -1,7 +1,7 @@
 clear
 clc
 
-scales = 1;%:4:40;
+scales = 36; %1:4:40;
 EoB = 4000;
 
 directory = fullfile('../../sequences', 'foreman20_40_RGB'); % path to src in the first part
@@ -96,8 +96,8 @@ for s = 1:numel(scales)
         bpp2 = (numel(bytestream2)*8) / (numel(im)/3);        
         bpp3 = (numel(bytestream3)*8) / (numel(im)/3);
 
-        bpp4 = (numel(dec_bytestream4)*8) / (numel(im)/3);
-        bpp5 = (numel(dec_bytestream5)*8) / (numel(im)/3);
+        bpp4 = (numel(bytestream4)*8) / (numel(im)/3);
+        bpp5 = (numel(bytestream5)*8) / (numel(im)/3);
 
         dec_err_im = IntraDecodeH264(dec_bytestream1, size(err_im), dec_bytestream4, dec_bytestream5, QP, EoB);
         dec_rec_im = SSDRec_h264(ref_im, dec_bytestream2, mv_indices16x16, dec_bytestream3);
