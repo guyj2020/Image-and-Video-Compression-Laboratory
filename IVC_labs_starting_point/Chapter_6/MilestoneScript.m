@@ -40,7 +40,7 @@ for s = 1:numel(scales)
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%
         % For Luma Part % 0 for 16x16; 1 for 8x8; 3 for 16x8 and 2 for 8x16
-        [MV_choice, mv_indices8x16, mv_indices16x8, mv_indices16x16, mv_indices8x8] = SSD_h264(ref_im(:, :, 1), im1(:, :, 1));
+        [MV_choice, mv_indices8x16, mv_indices16x8, mv_indices16x16, mv_indices8x8] = SSD_h264(ref_im(:, :, 1), im1(:, :, 1), 50);
         mv_indices = cut_motion_vect_mat(MV_choice, mv_indices16x16, mv_indices8x8, mv_indices8x16, mv_indices16x8);
 
         rec_im = SSDRec_h264(ref_im, MV_choice, mv_indices16x16, mv_indices);
