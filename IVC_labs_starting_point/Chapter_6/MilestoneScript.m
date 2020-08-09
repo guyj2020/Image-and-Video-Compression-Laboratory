@@ -1,7 +1,7 @@
 clear
 clc
 
-scales = 1;%:4:40;
+scales = 1:4:40;
 EoB = 4000;
 
 directory = fullfile('../../sequences', 'foreman20_40_RGB'); % path to src in the first part
@@ -115,13 +115,24 @@ for s = 1:numel(scales)
 
     end
 
-
-
-
     final_still_rate(s) = mean(still_im_rate);
     final_still_psnr(s) = mean(still_im_psnr);
+    
+    final_rate(s) = mean(rate);
+    final_psnr(s) = mean(psnr);
+    fprintf('Final Results: \n');
+    fprintf('QP: %.1f bit-rate: %.3f bits/pixel PSNR: %.2fdB\n', QP, final_rate(s), final_psnr(s))
+
 end
 
 figure;
+hold on
+plot(final_rate, final_psnr, 'bx-')
+xlabel("bpp");
+ylabel('PSNR [dB]');
+
+
 plot(final_still_rate, final_still_psnr, 'rx-')
-% set(gca,'XTick', 0.0:0.5:6);
+set(gca,'XTick', 0.0:0.5:6);
+
+legend("Inter Mode", "Intra Mode")
